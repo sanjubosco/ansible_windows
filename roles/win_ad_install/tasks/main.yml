@@ -1,0 +1,35 @@
+---
+# tasks file for win_ad_install
+- name: Install Active Directory
+  win_feature:
+   name: AD-Domain-Services
+   include_management_tools: yes
+   include_sub_features: yes
+   state: present
+
+- name: Install Domain
+  win_domain:
+   dns_domain_name: "{{ad_domain_name}}"
+   safe_mode_password: "{{ad_safe_mode_password}}"
+  register: ad_domain
+
+- name: Reboot the Server
+  win_reboot:
+   msg: "Warning. Server Going For Reboot..."
+   pre_reboot_delay: 10
+   post_reboot_delay: 30
+  when: ad_domain.changed
+  register: ad_reboot
+
+- name: List All Domain Variables
+  win_command: nltest /dclist:"{{ad_domain_name}}"
+  when: ad_reboot is defined
+  register: all_domain_variables
+
+- name: Print All Domain Variables
+  debug:
+   msg: "{{item}}"
+  when: all_domain_variables is defined
+  with_items: "{{all_domain_variables.stdout_lines | default()}}"
+
+... 

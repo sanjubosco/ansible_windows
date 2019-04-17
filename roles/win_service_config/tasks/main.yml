@@ -1,0 +1,37 @@
+---
+# tasks file for win_service_config
+- name: Install Chocolatey
+  win_chocolatey:
+   name : "chocolatey"
+   state:  downgrade
+   version: 0.10.11
+
+- name: Install SSH Server
+  win_chocolatey:
+   name: openssh
+   params: /SSHServerFeature
+   state: present
+  register: ssh_install
+
+- name: Start on Reboot
+  win_service:
+   name: "{{service_name}}"
+   start_mode: auto
+  when: ssh_install is defined
+
+- name: Start the SSH Server
+  win_service:
+   name: "{{service_name}}"
+   state: started
+  when: ssh_install is defined
+
+- name: Add Firewall Rule
+  win_firewall_rule:
+   name: SSH
+   localport: "{{local_port}}"
+   action: allow
+   direction: in
+   protocol: tcp
+   state: present
+   enabled: yes
+

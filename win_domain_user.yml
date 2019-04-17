@@ -1,0 +1,6 @@
+- name: Setup AD Service
+  hosts: windows
+  gather_facts: false
+  become: true
+  roles:
+   - role: win_domain_user
